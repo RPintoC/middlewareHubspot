@@ -65,4 +65,8 @@ body {
   .hidden {
     display: none;
   }
+
+  .hiddenUpdate {
+    display: none;
+  }
   

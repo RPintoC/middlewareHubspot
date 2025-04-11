@@ -82,8 +82,10 @@ document.getElementById("searchButton").addEventListener("click", async function
   const email = document.getElementById("searchEmail").value;
   const searchedTable = document.getElementById("emailSearchedTable");
   const searchedTableBody = document.getElementById("emailSearchedTableBody");
+  const askUpdateButton = document.getElementById("wantToUpdate");
   searchedTableBody.innerHTML ="";
   searchedTable.classList="hidden";
+  askUpdateButton.classList="hidden";
 
   try {
     const response = await fetch(`${API_URL}/email/${email}`);
@@ -92,9 +94,10 @@ document.getElementById("searchButton").addEventListener("click", async function
 
     if (contact && contact.properties!=undefined) {
       searchedTable.classList.remove("hidden");
+      askUpdateButton.classList.remove("hidden");
       searchedTableBody.innerHTML = 
       `<td>${contact.id}</td>
-          <td>${contact.properties.firstname || "Sin Nombre"}</td>
+          <td>${contact.properties.firstname}</td>
           <td>${contact.properties.lastname || "Sin Apellido"}</td>
           <td>${contact.properties.email || "Sin Correo"}</td>
           <td>${contact.properties.phone || "Sin Teléfono"}</td>
@@ -108,6 +111,66 @@ document.getElementById("searchButton").addEventListener("click", async function
   } catch (error) {
     console.error("Error al buscar el contacto:", error);
     document.getElementById("errorMessageSearch").innerText = "Error al buscar el contacto.";
+  }
+});
+
+var selectedContactId = null;
+//Generar formulario para actualizar contacto
+document.getElementById("wantToUpdate").addEventListener("click", async function () {
+  const updateForm = document.getElementById("updateForm");
+  updateForm.classList="hiddenUpdate";
+  const email = document.getElementById("searchEmail").value;
+  
+  try {
+    const response = await fetch(`${API_URL}/email/${email}`);
+    const contact = await response.json();
+    
+    if (contact && contact.properties!=undefined) {
+      selectedContactId = contact.id;
+      console.log(selectedContactId);
+      updateForm.classList.remove("hiddenUpdate");
+      document.getElementById("firstnameU").value=contact.properties.firstname;
+      document.getElementById("lastnameU").value=contact.properties.lastname|| "Sin Apellido";
+      document.getElementById("emailU").value=contact.properties.email|| "Sin Correo";
+      document.getElementById("phoneU").value=contact.properties.phone|| "Sin Teléfono";
+    }
+  } catch (error) {
+    console.error("Error al buscar el contacto:", error);
+  }
+});
+
+// Actuaizar un nuevo contacto
+document.getElementById("updateForm").addEventListener("submit", async function (event) {
+  event.preventDefault();
+
+  const contactData = {
+    firstname: document.getElementById("firstnameU").value,
+    lastname: document.getElementById("lastnameU").value,
+    email: document.getElementById("emailU").value,
+    phone: document.getElementById("phoneU").value,
+  };
+
+  try {
+    const response = await fetch(`${API_URL}/${selectedContactId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(contactData),
+    });
+
+    if (response.ok) {
+      alert("Contacto actualizado exitosamente");
+      document.getElementById("updateForm").classList="hiddenUpdate";
+      document.getElementById("wantToUpdate").classList="hidden";
+      document.getElementById("emailSearchedTableBody").innerHTML="";
+      document.getElementById("emailSearchedTable").classList="hidden";
+      loadContacts(); // Recargar lista
+    } else {
+      document.getElementById("errorMessagePost").innerText = "Error al actualizar contacto.";
+      //      alert("Error al guardar el contacto");
+    }
+  } catch (error) {
+    console.error("Error al actualizar contacto:", error);
+//    document.getElementById("errorMessagePost").innerText = "Error al actualizar contacto.";
   }
 });
 
